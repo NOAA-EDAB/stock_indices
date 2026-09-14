@@ -30,12 +30,49 @@ for (istock in 1:nrow(northeast_stocks)) {
   all_mort <- rbind(all_mort, fmort)
 }
 
+# add regional management column
+bio_regional <- all_bio |>
+  dplyr::mutate(
+    region = dplyr::case_when(
+      stringr::str_detect(
+        stock,
+        "Atlantic surfclam|Ocean quahog|Summer flounder|Scup|Black sea bass|Atlantic mackerel|Butterfish|Bluefish|tilefish|Tilefish|squid"
+      ) ~
+        "MAFMC",
+      stringr::str_detect(
+        stock,
+        "Atlantic cod|Haddock|Yellowtail flounder|Ocean pout|Windowpane|Pollock|American plaice|Witch flounder|Winter flounder|Atlantic wolffish|White hake|Acadian redfish|Atlantic halibut|Red deepsea crab|Sea scallop|Atlantic herring|Silver hake|Red hake|Offshore hake|Atlantic salmon|skate"
+      ) ~
+        "NEFMC",
+      stringr::str_detect(stock, "Spiny dogfish|Goosefish") ~ "NEFMC/MAFMC",
+      TRUE ~ "Other" # Default fallback
+    )
+  )
+
+mort_regional <- all_mort |>
+  dplyr::mutate(
+    region = dplyr::case_when(
+      stringr::str_detect(
+        stock,
+        "Atlantic surfclam|Ocean quahog|Summer flounder|Scup|Black sea bass|Atlantic mackerel|Butterfish|Bluefish|tilefish|Tilefish|squid"
+      ) ~
+        "MAFMC",
+      stringr::str_detect(
+        stock,
+        "Atlantic cod|Haddock|Yellowtail flounder|Ocean pout|Windowpane|Pollock|American plaice|Witch flounder|Winter flounder|Atlantic wolffish|White hake|Acadian redfish|Atlantic halibut|Red deepsea crab|Sea scallop|Atlantic herring|Silver hake|Red hake|Offshore hake|Atlantic salmon|skate"
+      ) ~
+        "NEFMC",
+      stringr::str_detect(stock, "Spiny dogfish|Goosefish") ~ "NEFMC/MAFMC",
+      TRUE ~ "Other" # Default fallback
+    )
+  )
+
 # LINE PLOTS
 
 ######### F/Fmsy ##########
 
 # Filter out missing values
-mort_clean <- all_mort |>
+mort_clean <- mort_regional |>
   dplyr::filter(!is.na(f_over_fmsy))
 
 # Plot
@@ -52,6 +89,7 @@ ggplot2::ggplot(
   ggplot2::geom_point(color = "black", size = 2) +
   ggplot2::stat_summary(fun = mean, geom = "line", color = "red", size = 1) +
   ggplot2::stat_summary(fun = mean, geom = "point", color = "red", size = 2.5) +
+  ggplot2::facet_wrap(~region, ncol = 1, scales = "free_y") +
   ggplot2::labs(
     title = "F/Fmsy for Managed Species",
     x = NULL,
@@ -64,14 +102,20 @@ ggplot2::ggplot(
     legend.title = ggplot2::element_blank(),
     axis.title.y = ggplot2::element_text(size = 12, color = "black"),
     axis.text = ggplot2::element_text(size = 11, color = "black"),
-    panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1),
-    axis.line = ggplot2::element_blank() # Border takes place of axis lines
+    panel.border = ggplot2::element_rect(
+      color = "black",
+      fill = NA,
+      linewidth = 1
+    ),
+    axis.line = ggplot2::element_blank(),
+    strip.background = ggplot2::element_rect(fill = "gray90", color = "black"),
+    strip.text = ggplot2::element_text(size = 11, face = "bold")
   )
 
 ######## B/Bmsy #########
 
 # Filter out missing values
-bio_clean <- all_bio |>
+bio_clean <- bio_regional |>
   dplyr::filter(!is.na(b_over_bmsy))
 
 # Plot
@@ -85,6 +129,7 @@ ggplot2::ggplot(bio_clean, ggplot2::aes(x = assessment_year, y = b_over_bmsy)) +
   ggplot2::geom_point(color = "black", size = 2) +
   ggplot2::stat_summary(fun = mean, geom = "line", color = "red", size = 1) +
   ggplot2::stat_summary(fun = mean, geom = "point", color = "red", size = 2.5) +
+  ggplot2::facet_wrap(~region, ncol = 1, scales = "free_y") +
   ggplot2::labs(
     title = "B/Bmsy for Managed Species",
     x = NULL,
@@ -97,6 +142,12 @@ ggplot2::ggplot(bio_clean, ggplot2::aes(x = assessment_year, y = b_over_bmsy)) +
     legend.title = ggplot2::element_blank(),
     axis.title.y = ggplot2::element_text(size = 12, color = "black"),
     axis.text = ggplot2::element_text(size = 11, color = "black"),
-    panel.border = ggplot2::element_rect(color = "black", fill = NA, size = 1),
-    axis.line = ggplot2::element_blank() # Border takes place of axis lines
+    panel.border = ggplot2::element_rect(
+      color = "black",
+      fill = NA,
+      linewidth = 1
+    ),
+    axis.line = ggplot2::element_blank(),
+    strip.background = ggplot2::element_rect(fill = "gray90", color = "black"),
+    strip.text = ggplot2::element_text(size = 11, face = "bold")
   )
